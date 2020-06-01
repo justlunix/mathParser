@@ -1,6 +1,6 @@
-# PHP MathParser
+# PHP 7.3 MathParser
 
-This is a WIP math parser for PHP.
+This is a WIP math parser for PHP >= 7.3.
 
 ## Usage
 ```php
