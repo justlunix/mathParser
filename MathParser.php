@@ -3,7 +3,6 @@
 class MathParser
 {
     private $math;
-    private $base;
     private $levels;
 
     public function evaluate(string $math)
@@ -13,8 +12,7 @@ class MathParser
         // trim normally & TODO: remove unnecessary brackets like ((((2+2)))) = 2+2
         $math = trim($math);
 
-        $this->math = $math;
-        // $this->base = $this->getBase(); TODO 
+        $this->math = "($math)"; // add parentheses so it counts as first level
         $this->levels = $this->parseParentheses($math);
         $this->levels = $this->replaceChildren($this->levels);
 
@@ -23,34 +21,15 @@ class MathParser
 
     private function calc(float $lastResult = 0)
     {
-        $nextCalc = $this->getNextCalc();
-
-        if (!empty($nextCalc)) {
-            // run $nextCalc and replace # in $math with result
-            $result = $this->getResult($nextCalc);
-
-            if ($result === false) return false;
-
-            $math = str_replace('#', $result, $math);
-
-            return $this->calc($result);
-        }
-
-        return $lastResult;
-    }
-
-    private function getNextCalc()
-    {
         if (count($this->levels) >= 1) {
             $prevLevel =& $this->getDeepestLevel($this->levels, true);
             $levels = [$prevLevel];
             $deepestLevel =& $this->getDeepestLevel($levels);
 
-            return $deepestLevel['value'];
+            // TODO: evaluate $deepestLevel['value']
         }
 
-        // TODO
-        return $this->base;
+        return $lastResult;
     }
 
     private function & getDeepestLevel(array &$levels, bool $getParent = false, ?array &$prevLevel = null)
