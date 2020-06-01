@@ -36,9 +36,91 @@ class MathParser
             $deepestLevel =& $this->getDeepestLevel($levels);
 
             // TODO: evaluate $deepestLevel['value']
+            $result = $this->getResult($deepestLevel['value']);
+            echo '<pre>';
+            print_r($result);
+            die();
         }
 
         return $lastResult;
+    }
+
+    /**
+     * @param string $operation
+     *
+     * @return string
+     */
+    private function getResult(string $operation): string
+    {
+        $operator = null;
+        if (strpos($operation, '^') !== false) {
+            $operator = '\^';
+        } else if (strpos($operation, '*') !== false) {
+            $operator = '\*';
+        } else if (strpos($operation, '/') !== false) {
+            $operator = '\/';
+        }
+
+        if ($operator) {
+            $c = preg_match_all('/[0-9]+' . $operator . '[0-9]+/', $operation, $matches);
+            if ($c > 0 && isset($matches)) {
+                $operator = str_replace('\\', '', $operator);
+
+                foreach ($matches[0] as $match) {
+                    $parts = explode($operator, $match);
+
+                    $first = $parts[0];
+                    $second = $parts[1];
+                    switch ($operator) {
+                        case '^': // TODO: right to left..
+                            $result = $first ^ $second;
+                            break;
+                        case '*':
+                            $result = $first * $second;
+                            break;
+                        case '/': // TODO: dividing 0
+                            $result = $first / $second;
+                            break;
+                        default:
+                            $result = 0;
+                            break;
+                    }
+
+                    $operation = $this->str_replace_first($match, $result, $operation);
+                }
+
+                return $this->getResult($operation);
+            }
+        }
+
+        if (strpos($operation, '+') !== false || strpos($operation, '-') !== false) {
+            $c = preg_match('/[0-9]+([-|+])[0-9]+/', $operation, $matches);
+            if ($c > 0 && isset($matches)) {
+                $match = $matches[0];
+                $operator = $matches[1];
+                $parts = explode($operator, $match);
+
+                $first = $parts[0];
+                $second = $parts[1];
+                switch ($operator) {
+                    case '+':
+                        $result = $first + $second;
+                        break;
+                    case '-':
+                        $result = $first - $second;
+                        break;
+                    default:
+                        $result = 0;
+                        break;
+                }
+
+                $operation = $this->str_replace_first($match, $result, $operation);
+
+                return $this->getResult($operation);
+            }
+        }
+
+        return $operation;
     }
 
     /**
@@ -124,15 +206,6 @@ class MathParser
         }
 
         return $data;
-    }
-
-    private function getResult(string $math)
-    {
-        if (!$this->isValid($math)) return false;
-
-        echo '<pre>';
-        print_r($math);
-        die();
     }
 
     // TODO
