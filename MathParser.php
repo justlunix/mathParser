@@ -2,9 +2,13 @@
 
 class MathParser
 {
-    private $math;
     private $levels;
 
+    /**
+     * @param string $math
+     *
+     * @return bool|float
+     */
     public function evaluate(string $math)
     {
         if (!$this->isValid($math)) return false;
@@ -12,14 +16,19 @@ class MathParser
         // trim normally & TODO: remove unnecessary brackets like ((((2+2)))) = 2+2
         $math = trim($math);
 
-        $this->math = "($math)"; // add parentheses so it counts as first level
+        $math = "($math)"; // add parentheses so it counts as first level
         $this->levels = $this->parseParentheses($math);
         $this->levels = $this->replaceChildren($this->levels);
 
         return $this->calc();
     }
 
-    private function calc(float $lastResult = 0)
+    /**
+     * @param float $lastResult
+     *
+     * @return float
+     */
+    private function calc(float $lastResult = 0): float
     {
         if (count($this->levels) >= 1) {
             $prevLevel =& $this->getDeepestLevel($this->levels, true);
@@ -32,7 +41,14 @@ class MathParser
         return $lastResult;
     }
 
-    private function & getDeepestLevel(array &$levels, bool $getParent = false, ?array &$prevLevel = null)
+    /**
+     * @param array      $levels
+     * @param bool       $getParent
+     * @param array|null $prevLevel
+     *
+     * @return array
+     */
+    private function & getDeepestLevel(array &$levels, bool $getParent = false, ?array &$prevLevel = null): array
     {
         $levelDepths = [];
         foreach ($levels as $key => $level) {
@@ -53,24 +69,16 @@ class MathParser
         return $this->getDeepestLevel($deepestLevel['children'], $getParent, $deepestLevel);
     }
 
-    private function array_depth(array $array)
-    {
-        $max_depth = 1;
-
-        foreach ($array as $value) {
-            if (is_array($value)) {
-                $depth = $this->array_depth($value) + 1;
-
-                if ($depth > $max_depth) {
-                    $max_depth = $depth;
-                }
-            }
-        }
-
-        return $max_depth;
-    }
-
-    private function parseParentheses(string $subject)
+    /**
+     * Creates an array to match levels of parentheses in $subject.
+     *
+     * @see https://gist.github.com/Xeoncross/4710324#gistcomment-2786921
+     *
+     * @param string $subject
+     *
+     * @return array
+     */
+    private function parseParentheses(string $subject): array
     {
         $result = [];
 
@@ -91,7 +99,15 @@ class MathParser
         return $result;
     }
 
-    private function replaceChildren(array $data, int $lastKey = 0)
+    /**
+     * Changes $this->levels to have replace keys for each children's values.
+     *
+     * @param array $data
+     * @param int   $lastKey
+     *
+     * @return array
+     */
+    private function replaceChildren(array $data, int $lastKey = 0): array
     {
         foreach ($data as &$item) {
             if (empty($item['children'])) continue;
@@ -110,6 +126,30 @@ class MathParser
         return $data;
     }
 
+    private function getResult(string $math)
+    {
+        if (!$this->isValid($math)) return false;
+
+        echo '<pre>';
+        print_r($math);
+        die();
+    }
+
+    // TODO
+    private function isValid(string $math)
+    {
+        return true;
+    }
+
+    /**
+     * Replaces only the first occurrence of $search in $subject with $replace.
+     *
+     * @param string $search
+     * @param string $replace
+     * @param string $subject
+     *
+     * @return string|string[]
+     */
     private function str_replace_first(string $search, string $replace, string $subject)
     {
         $pos = strpos($subject, $search);
@@ -120,19 +160,27 @@ class MathParser
         return $subject;
     }
 
-    private function getResult(string $math)
+    /**
+     * @see https://stackoverflow.com/a/262944/13162601
+     *
+     * @param array $array
+     *
+     * @return int
+     */
+    private function array_depth(array $array): int
     {
-        if (!$this->isValid($math)) return false;
+        $max_depth = 1;
 
-        echo '<pre>';
-        print_r($math);
-        die();
+        foreach ($array as $value) {
+            if (is_array($value)) {
+                $depth = $this->array_depth($value) + 1;
 
-    }
+                if ($depth > $max_depth) {
+                    $max_depth = $depth;
+                }
+            }
+        }
 
-    // TODO
-    private function isValid(string $math)
-    {
-        return true;
+        return $max_depth;
     }
 }
