@@ -70,6 +70,8 @@ class MathParser
      */
     private function getResult(string $operation): float
     {
+        $num = "[0-9]*[.]?[0-9]+";
+
         $operator = null;
         if (strpos($operation, '^') !== false) {
             $operator = '\^';
@@ -80,7 +82,7 @@ class MathParser
         }
 
         if ($operator) {
-            $c = preg_match('/[0-9]+([' . $operator . '])[0-9]+/', $operation, $matches);
+            $c = preg_match("/$num([" . $operator . "])$num/", $operation, $matches);
             if ($c > 0 && isset($matches)) {
                 $match = $matches[0];
                 $operator = $matches[1];
@@ -112,6 +114,7 @@ class MathParser
                 } catch (Exception $e) {
                     $result = 0;
                 }
+                echo "$match = $result ($operation)" . PHP_EOL;
 
                 $operation = $this->str_replace_first($match, $result, $operation);
 
