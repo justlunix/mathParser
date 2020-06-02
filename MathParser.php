@@ -91,7 +91,7 @@ class MathParser
                     $second = $parts[1];
                     switch ($operator) {
                         case '^': // TODO: right to left..
-                            $result = $first ^ $second;
+                            $result = pow($first, $second);
                             break;
                         case '*':
                             $result = $first * $second;
