@@ -21,10 +21,6 @@ class MathParser
         $this->levels = $this->parseParentheses($math);
         $this->levels = $this->replaceChildren($this->levels);
 
-        echo '<pre>';
-        print_r($this->levels);
-        die();
-
         return $this->calc();
     }
 
@@ -74,26 +70,31 @@ class MathParser
      */
     private function getResult(string $operation): float
     {
-        $num = "[0-9]*[.]?[0-9]+";
+        $num = "/^\((-[0-9]*[.]?[0-9]+)\)$/";
+        $c = preg_match($num, $operation, $matches);
+        if ($c > 0) {
+            return floatval($matches[1]);
+        };
+
+        $num = "\(?(-?\d+\.?\d?)\)?";
 
         $operator = null;
         if (strpos($operation, '^') !== false) {
             $operator = '\^';
         } else if (strpos($operation, '*') !== false || strpos($operation, '/') !== false) {
-            $operator = '*|\/';
+            $operator = '\*|\/';
         } else if (strpos($operation, '+') !== false || strpos($operation, '-') !== false) {
-            $operator = '-|+';
+            $operator = '-|\+';
         }
 
         if ($operator) {
-            $c = preg_match("/$num([" . $operator . "])$num/", $operation, $matches);
+            $c = preg_match("/$num(" . $operator . ")$num/", $operation, $matches);
             if ($c > 0 && isset($matches)) {
                 $match = $matches[0];
-                $operator = $matches[1];
-                $parts = explode($operator, $match);
 
-                $first = $parts[0];
-                $second = $parts[1];
+                $first = $matches[1];
+                $operator = $matches[2];
+                $second = $matches[3];
                 try {
                     switch ($operator) {
                         case '^': // TODO: right to left..
@@ -118,7 +119,6 @@ class MathParser
                 } catch (Exception $e) {
                     $result = 0;
                 }
-                echo "$match = $result ($operation)" . PHP_EOL;
 
                 if ($result < 0) $result = "($result)";
 
