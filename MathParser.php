@@ -21,6 +21,10 @@ class MathParser
         $this->levels = $this->parseParentheses($math);
         $this->levels = $this->replaceChildren($this->levels);
 
+        echo '<pre>';
+        print_r($this->levels);
+        die();
+
         return $this->calc();
     }
 
@@ -116,6 +120,8 @@ class MathParser
                 }
                 echo "$match = $result ($operation)" . PHP_EOL;
 
+                if ($result < 0) $result = "($result)";
+
                 $operation = $this->str_replace_first($match, $result, $operation);
 
                 return $this->getResult($operation);
@@ -169,6 +175,11 @@ class MathParser
         preg_match_all('~[^\(\)]+|\((?<nested>(?R)*)\)~', $subject, $matches);
 
         foreach (array_filter($matches['nested']) as $match) {
+            // negative values are not levels
+            $num = "/^-[0-9]*[.]?[0-9]+$/";
+            $c = preg_match($num, $match, $matches);
+            if ($c > 0) continue;
+
             $item = [];
 
             $item['value'] = $match;
