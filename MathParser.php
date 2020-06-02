@@ -15,6 +15,7 @@ class MathParser
 
         // trim normally & TODO: remove unnecessary brackets like ((((2+2)))) = 2+2
         $math = trim($math);
+        $math = preg_replace('/\s+/', '', $math);
 
         $math = "($math)"; // add parentheses so it counts as first level
         $this->levels = $this->parseParentheses($math);
@@ -32,14 +33,31 @@ class MathParser
     {
         if (count($this->levels) >= 1) {
             $prevLevel =& $this->getDeepestLevel($this->levels, true);
-            $levels = [$prevLevel];
-            $deepestLevel =& $this->getDeepestLevel($levels);
+            if (!$prevLevel) {
+                $deepestLevel = $this->getDeepestLevel($this->levels);
+                $lastOperation = $deepestLevel['value'];
 
-            // TODO: evaluate $deepestLevel['value']
-            $result = $this->getResult($deepestLevel['value']);
-            echo '<pre>';
-            print_r($result);
-            die();
+                return $this->getResult($lastOperation);
+            } else {
+                $levels = [$prevLevel];
+                $deepestLevel =& $this->getDeepestLevel($levels);
+
+                $result = $this->getResult($deepestLevel['value']);
+
+                $replaces = $deepestLevel['replaces'];
+                $prevLevel['value'] = str_replace($replaces, $result, $prevLevel['value']);
+
+                foreach ($prevLevel['children'] as $key => $child) {
+                    if ($child['replaces'] === $replaces) {
+                        unset($prevLevel['children'][$key]);
+                    }
+                }
+                if (empty($prevLevel['children'])) {
+                    unset($prevLevel['children']);
+                }
+
+                return $this->calc($lastResult + $result);
+            }
         }
 
         return $lastResult;
@@ -48,9 +66,9 @@ class MathParser
     /**
      * @param string $operation
      *
-     * @return string
+     * @return float
      */
-    private function getResult(string $operation): string
+    private function getResult(string $operation): float
     {
         $operator = null;
         if (strpos($operation, '^') !== false) {
@@ -120,7 +138,7 @@ class MathParser
             }
         }
 
-        return $operation;
+        return floatval($operation);
     }
 
     /**
@@ -130,7 +148,7 @@ class MathParser
      *
      * @return array
      */
-    private function & getDeepestLevel(array &$levels, bool $getParent = false, ?array &$prevLevel = null): array
+    private function & getDeepestLevel(array &$levels, bool $getParent = false, ?array &$prevLevel = null): ?array
     {
         $levelDepths = [];
         foreach ($levels as $key => $level) {
