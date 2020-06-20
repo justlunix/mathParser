@@ -88,7 +88,15 @@ class MathParser
         }
 
         if ($operator) {
-            $c = preg_match("/$num(" . $operator . ")$num/", $operation, $matches);
+            $pattern = '/';
+            if ($operator == '\^') {
+                // when using exponents we need the last one first.
+                $pattern .= ".*$num(" . $operator . ")$num/";
+            } else {
+                $pattern .= "$num(" . $operator . ")$num/";
+            }
+
+            $c = preg_match($pattern, $operation, $matches);
             if ($c > 0 && isset($matches)) {
                 $match = $matches[0];
 
@@ -97,8 +105,9 @@ class MathParser
                 $second = $matches[3];
                 try {
                     switch ($operator) {
-                        case '^': // TODO: right to left..
+                        case '^':
                             $result = pow($first, $second);
+                            $match = "$first^$second";
                             break;
                         case '*':
                             $result = $first * $second;
