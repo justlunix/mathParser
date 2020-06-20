@@ -91,10 +91,9 @@ class MathParser
             $pattern = '/';
             if ($operator == '\^') {
                 // when using exponents we need the last one first.
-                $pattern .= ".*$num(" . $operator . ")$num/";
-            } else {
-                $pattern .= "$num(" . $operator . ")$num/";
+                $pattern .= ".*";
             }
+            $pattern .= "$num(" . $operator . ")$num/";
 
             $c = preg_match($pattern, $operation, $matches);
             if ($c > 0 && isset($matches)) {
